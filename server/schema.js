@@ -6,50 +6,61 @@ const { getSingleUser, createUser, login, saveBook, deleteBook } = require("./co
 // Declaring the Schema
 const typeDefs = gql`
     type User {
+        _id: ID!
         username: String!
         email: String!
-        password: String!
+        bookCount: Int!
         savedBooks: [Book]
     }
 
     type Book {
+     bookId: String!
         authors: [String]
         description: String!
-        bookID: String!
+        title: String!
         image: String
         link: String
-        title: String!
+    }
+    
+    type Auth {
+        token: ID!
+        user: User
     }
 
     type Query {
-        getSingleUser(id:String): User
+        me: User
     }
     
     type Mutation {
-        createUser(body:String): User
-        login(body:String): User
-        saveBook(user:String,body:String): Book
-        deleteBook(user:String,params:String): Book    
+        addUser(username:String!, email:String!, password:String!): Auth
+        login(email:String!, password: String!): Auth
+        saveBook(bookInput: bookInput): User
+        deleteBook(bookId: ID!): User    
+    }
+
+    input bookInput {
+        description: String!
+        title: String!
+        bookId: ID!
+        image: String
+        link: String
     }
 `
 // Logic here
 const resolvers = {
     Query: {
-        getSingleUser: async (_, { user, id }) => 
-            { return getSingleUser({user,id}) }
+        me: async (_, __, context) => { return getSingleUser({context}) }
     },
     Mutation: {
-        createUser: async (_,{body}) =>
-            {return createUser({body})},
-        login: async (_,{body}) =>
-            { return login({body})},
-        saveBook: async (_,{user,body}) =>
-            { return saveBook({user,body})},
-        deleteBook: async (_,{user,params}) =>
-            { return deleteBook({user,params})},
+        addUser: async (_, { username, email, password }) => { return createUser({ username, email, password }) },
+        login: async (_, { email, password }) => { return login({ email, password }) },
+        saveBook: async (_, { bookInput}, context) => { 
+            console.log(context);
+            return saveBook({ bookInput, context})},
+        deleteBook: async (_, { bookId }, context) => { return deleteBook({ bookId, context }) },
     }
 
 
 }
 
-module.exports = {typeDefs,resolvers}
+module.exports = { typeDefs, resolvers }
